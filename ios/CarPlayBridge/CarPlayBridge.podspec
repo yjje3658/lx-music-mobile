@@ -7,6 +7,8 @@ Pod::Spec.new do |s|
   s.author       = { 'lx-music-custom' => 'dev@example.com' }
   s.source       = { :git => 'https://github.com/lyswhut/lx-music-mobile.git', :tag => s.version.to_s }
   s.source_files = 'CarPlayBridge/**/*.{h,m}'
-  s.dependency   'React-Core'
+  s.frameworks   = 'CarPlay', 'UIKit'
+  s.dependency   = 'React-Core'
+  s.pod_target_xcconfig = { 'HEADER_SEARCH_PATHS' => '"$(PODS_ROOT)/../LxMusicMobile"' }
   s.platform     = :ios, '15.0'
 end
