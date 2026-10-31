@@ -7,13 +7,18 @@ import { exitApp } from './utils/nativeModules/utils'
 import { windowSizeTools } from './utils/windowSizeTools'
 import { listenLaunchEvent } from './navigation/regLaunchedEvent'
 import { tipDialog } from './utils/tools'
+import { Alert } from 'react-native'
+
+const diag = (msg: string) => Alert.alert('启动诊断', msg)
 
 console.log('starting app...')
+diag('1. JS已启动，正在注册RNN监听')
 listenLaunchEvent()
 
 void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize]) => {
   global.lx.fontSize = fontSize
   bootLog('Font size setting loaded.')
+  diag('2. 字体初始化完成，开始注册导航')
 
   let isInited = false
   let handlePushedHomeScreen: () => void | Promise<void>
@@ -33,6 +38,7 @@ void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize])
     try {
       handlePushedHomeScreen = await init()
     } catch (err: any) {
+      Alert.alert('启动诊断-初始化失败', `${err.stack ?? err.message}`)
       void tipDialog({
         title: '初始化失败 (Init Failed)',
         message: `Boot Log:\n${tryGetBootLog()}\n\n${(err.stack ?? err.message) as string}`,
@@ -48,13 +54,16 @@ void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize])
   const { init: initNavigation, navigations } = await import('@/navigation')
 
   initNavigation(async() => {
+    diag('3. 初始化回调执行')
     await handleInit()
     if (!isInited) return
     // import('@/utils/nativeModules/cryptoTest')
 
     await navigations.pushHomeScreen().then(() => {
+      diag('4. setRoot完成，界面应显示')
       void handlePushedHomeScreen()
     }).catch((err: any) => {
+      Alert.alert('启动诊断-pushHomeScreen失败', `${err.message}`)
       void tipDialog({
         title: 'Error',
         message: err.message,
@@ -66,6 +75,7 @@ void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize])
     })
   })
 }).catch((err) => {
+  Alert.alert('启动诊断-顶层失败', `${err.stack ?? err.message}`)
   void tipDialog({
     title: '初始化失败 (Init Failed)',
     message: `Boot Log:\n\n${(err.stack ?? err.message) as string}`,
