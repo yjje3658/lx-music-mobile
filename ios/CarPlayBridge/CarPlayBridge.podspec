@@ -9,6 +9,8 @@ Pod::Spec.new do |s|
   s.source_files = 'CarPlayBridge/**/*.{h,m}'
   s.frameworks   = 'CarPlay', 'UIKit'
   s.dependency   'React-Core'
+  s.dependency   'React-RCTAppDelegate'
+  s.dependency   'ReactNativeNavigation'
   s.pod_target_xcconfig = { 'HEADER_SEARCH_PATHS' => '"$(PODS_ROOT)/../LxMusicMobile"' }
   s.platform     = :ios, '15.0'
 end
