@@ -48,31 +48,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 <true/>
-</dict>
-</plist>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict>
-			<key>UIWindowSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneConfigurationName</key>
-					<string>Default</string>
-					<key>UISceneDelegateClassName</key>
-					<string>SceneDelegate</string>
-				</dict>
-			</array>
-			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneConfigurationName</key>
-					<string>CarPlay</string>
-					<key>UISceneDelegateClassName</key>
-					<string>CarPlaySceneDelegate</string>
-				</dict>
-			</array>
-		</dict>
+		...（场景配置内容，不动）...
 	</dict>
+	</dict>
+</plist>
+
+</dict>
+</plist>
+	
