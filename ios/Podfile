@@ -28,12 +28,14 @@ end
 target 'LxMusicMobile' do
   config = use_native_modules!
 
+  # 手动链接 react-native-file-system（自动链接扫不到这个 git 依赖包，必须手动加）
+  pod 'react-native-file-system', :path => '../node_modules/react-native-file-system'
+
   use_react_native!(
     :path => config[:reactNativePath],
-    # 关闭 Hermes，改用 JavaScriptCore（修复 iOS 27 上启动卡死）
+    # 关闭 Hermes，改用 JavaScriptCore（老 Hermes 在 iOS 27 上执行字节码卡死）
     :hermes_enabled => false,
     :flipper_configuration => flipper_config,
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
