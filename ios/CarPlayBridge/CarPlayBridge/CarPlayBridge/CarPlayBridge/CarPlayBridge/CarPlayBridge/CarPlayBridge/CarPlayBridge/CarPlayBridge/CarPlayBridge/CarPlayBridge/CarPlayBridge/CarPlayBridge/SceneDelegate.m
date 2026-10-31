@@ -12,17 +12,22 @@
   RCTBridge *bridge = appDelegate.bridge;
   NSAssert(bridge != nil, @"bridge 必须在 didFinishLaunching 中创建完成");
 
-  // ReactNativeNavigation 接管窗口与根视图
-  [ReactNativeNavigation bootstrapWithBridge:bridge];
+  // RNN 启动时主窗口取自 UIApplication.delegate.window。
+  // 若它是 nil，RNN 会自己新建一个没绑定场景的窗口 → iOS 13+ 场景模式下不显示 → 黑屏。
+  // 所以必须先创建并绑定当前场景的窗口，再交给 AppDelegate。
+  UIWindow *window = [[UIWindow alloc] initWithWindowScene:(UIWindowScene *)scene];
+  self.window = window;
 
-  // 修复黑屏：RNN 创建的主窗口没有绑定 windowScene（多场景模式下不绑定就黑屏）
-  // 把它创建的窗口绑定到当前场景并显示
-  for (UIWindow *w in UIApplication.sharedApplication.windows) {
-    if (w.windowScene == nil) {
-      w.windowScene = (UIWindowScene *)scene;
-      [w makeKeyAndVisible];
-    }
+  // 把窗口交给 AppDelegate（RNN 从 delegate.window 取主窗口）
+  @try {
+    [appDelegate setValue:window forKey:@"window"];
+  } @catch (NSException *e) {
+    appDelegate.window = window;
   }
+
+  // RNN 接管导航（此时它拿到的就是我们已绑定场景的窗口）
+  [ReactNativeNavigation bootstrapWithBridge:bridge];
+  [window makeKeyAndVisible];
 }
 
 @end
