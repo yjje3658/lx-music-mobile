@@ -1,0 +1,63 @@
+# lx-music-mobile (落雪音乐) iOS 无签名 IPA 云编译
+# 用途：在没有 Mac 的情况下，用 GitHub Actions 的 macOS runner 编译 iOS 版 IPA
+name: Build lx-music-mobile iOS IPA (unsigned)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ios-build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: CocoaPods install (Flipper disabled)
+        run: |
+          cd ios
+          NO_FLIPPER=1 pod install
+
+      - name: Enable background audio mode in Info.plist
+        run: |
+          PLIST="ios/LxMusicMobile/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string audio" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :UIBackgroundModes" "$PLIST"
+
+      - name: Build unsigned .app (Release, device SDK)
+        run: |
+          cd ios
+          xcodebuild -workspace LxMusicMobile.xcworkspace \
+            -scheme LxMusicMobile \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          APP="ios/build/Build/Products/Release-iphoneos/LxMusicMobile.app"
+          test -d "$APP" || { echo "::error::app not found: $APP"; exit 1; }
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry LxMusicMobile-unsigned.ipa Payload
+          rm -rf Payload
+          ls -la LxMusicMobile-unsigned.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: lx-music-ios-unsigned-ipa
+          path: LxMusicMobile-unsigned.ipa
