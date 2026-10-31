@@ -21,13 +21,12 @@
     configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession
                                    options:(UISceneConnectionOptions *)options
 {
-  UISceneConfiguration *config =
-      [[UISceneConfiguration alloc] initWithName:@"Default"
-                                     sessionRole:connectingSceneSession.role];
   if ([connectingSceneSession.role isEqualToString:CPTemplateApplicationSceneSessionRoleApplication]) {
-    config.name = @"CarPlay";
+    return [[UISceneConfiguration alloc] initWithName:@"CarPlay"
+                                         sessionRole:connectingSceneSession.role];
   }
-  return config;
+  return [[UISceneConfiguration alloc] initWithName:@"Default"
+                                       sessionRole:connectingSceneSession.role];
 }
 
 - (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge {
