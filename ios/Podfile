@@ -39,6 +39,9 @@ target 'LxMusicMobile' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # CarPlay 支持（本地 pod，全部新增原生代码）
+  pod 'CarPlayBridge', :path => './CarPlayBridge'
+
   target 'LxMusicMobileTests' do
     inherit! :complete
     # Pods for testing
