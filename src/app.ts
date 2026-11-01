@@ -50,7 +50,10 @@ void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize])
     }
     isInited ||= true
   }
+
+  diag('2.6 开始加载导航模块...')
   const { init: initNavigation, navigations } = await import('@/navigation')
+  diag('2.7 导航模块已加载')
 
   initNavigation(async() => {
     diag('3. 初始化回调执行')
