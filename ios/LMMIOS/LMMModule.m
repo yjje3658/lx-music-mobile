@@ -15,7 +15,7 @@ RCT_EXPORT_MODULE(LocalMediaMetadata);
 RCT_EXPORT_METHOD(readMetadata:(NSString *)filePath resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
   NSURL *url = [NSURL fileURLWithPath:filePath];
   AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:@{AVURLAssetPreferPreciseDurationAndTimingKey: @YES}];
-  [asset loadValuesAsynchronouslyForKeys:@[@"commonMetadata", @"duration", @"estimatedBitrate"] completionHandler:^{
+  [asset loadValuesAsynchronouslyForKeys:@[@"commonMetadata", @"duration"] completionHandler:^{
     NSString *title = nil, *artist = nil, *album = nil;
     for (NSString *format in [asset availableMetadataFormats]) {
       for (AVMetadataItem *item in [asset metadataForFormat:format]) {
@@ -29,10 +29,9 @@ RCT_EXPORT_METHOD(readMetadata:(NSString *)filePath resolver:(RCTPromiseResolveB
     NSString *ext = [filePath pathExtension];
     CMTime duration = asset.duration;
     NSNumber *interval = CMTIME_IS_NUMERIC(duration) ? @(CMTimeGetSeconds(duration)) : @0;
-    NSNumber *bitrate = @(asset.estimatedBitrate);
     resolve(@{
       @"type": ext ?: @"",
-      @"bitrate": bitrate ? [bitrate stringValue] : @"",
+      @"bitrate": @"",
       @"interval": interval,
       @"size": attrs[NSFileSize] ?: @0,
       @"ext": ext ?: @"",
