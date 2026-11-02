@@ -2,6 +2,7 @@
 #import <React/RCTConvert.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <zlib.h>
+#import <string.h>
 #import <Foundation/Foundation.h>
 
 @interface RNFSModule : NSObject <RCTBridgeModule>
