@@ -11,14 +11,31 @@ import { tipDialog } from './utils/tools'
 
 const diag = (msg: string) => Alert.alert('启动诊断', msg)
 
+// 超时保护：任何初始化 Promise 挂死，超时后跳过继续，不再卡死黑屏
+const withTimeout = <T>(p: Promise<T>, ms: number, name: string): Promise<T | undefined> =>
+  Promise.race([
+    p,
+    new Promise<T | undefined>((resolve) => {
+      setTimeout(() => {
+        console.log(`[diag] ${name} 超时${ms}ms，跳过继续`)
+        resolve(undefined)
+      }, ms)
+    }),
+  ])
+
 console.log('starting app...')
 diag('1. JS已启动，正在注册RNN监听')
 listenLaunchEvent()
 
-void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize]) => {
-  global.lx.fontSize = fontSize
+void (async() => {
+  diag('2.1 开始读取设置/初始化窗口工具')
+  const [fontSize] = await Promise.all([
+    withTimeout(getFontSize(), 5000, 'getFontSize'),
+    withTimeout(windowSizeTools.init(), 5000, 'windowSizeTools'),
+  ])
+  global.lx.fontSize = fontSize ?? 1
   bootLog('Font size setting loaded.')
-  diag('2. 字体初始化完成，开始注册导航')
+  diag('2.2 初始化完成，开始注册导航')
 
   let isInited = false
   let handlePushedHomeScreen: () => void | Promise<void>
@@ -75,7 +92,7 @@ void Promise.all([getFontSize(), windowSizeTools.init()]).then(async([fontSize])
       })
     })
   })
-}).catch((err) => {
+})().catch((err) => {
   void tipDialog({
     title: '初始化失败 (Init Failed)',
     message: `Boot Log:\n\n${(err.stack ?? err.message) as string}`,
