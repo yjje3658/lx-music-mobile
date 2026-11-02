@@ -12,23 +12,21 @@
   RCTBridge *bridge = appDelegate.bridge;
   NSAssert(bridge != nil, @"bridge 必须在 didFinishLaunching 中创建完成");
 
-  // 创建绑定当前场景的窗口，交给 AppDelegate（RNN 从 delegate.window 取主窗口）
+  // 创建绑定当前场景的窗口
   UIWindow *window = [[UIWindow alloc] initWithWindowScene:(UIWindowScene *)scene];
   self.window = window;
 
+  // 交给 AppDelegate（RNN 从 delegate.window 取主窗口）
   @try {
     [appDelegate setValue:window forKey:@"window"];
   } @catch (NSException *e) {
     appDelegate.window = window;
   }
 
-  // 关键①：立即显示窗口（先不管 RNN）——覆盖 LaunchScreen，
-  // 如果这里都没效果，说明场景根本没创建（SceneDelegate 没被调用）。
+  // 立即显示窗口（覆盖 LaunchScreen）
   [window makeKeyAndVisible];
 
-  // 关键②：轮询等 JS bundle 加载完成后再让 RNN 接管。
-  // 不用通知监听（通知 object 不匹配会永远等不到 → 白屏），
-  // 每 0.1 秒查一次 bridge.isLoading，最长等 10 秒。
+  // 轮询等 JS bundle 加载完成（不依赖通知 object，最稳）
   __weak typeof(self) weakSelf = self;
   __block int tries = 0;
   void (^waitAndBootstrap)(void) = ^{
@@ -40,10 +38,36 @@
                      dispatch_get_main_queue(), waitAndBootstrap);
     } else {
       [ReactNativeNavigation bootstrapWithBridge:bridge];
+      [strongSelf repointRNNWindowToSceneWindow:window];
       [strongSelf.window makeKeyAndVisible];
     }
   };
   waitAndBootstrap();
+}
+
+// 关键修复：RNN 在 didFinishLaunching 时自己创建了"无场景"窗口（_mainWindow），
+// iOS 13+ 无场景窗口不显示 → 白屏。用 KVC 把 RNN 的 _mainWindow 换成场景窗口，
+// 并把已挂上的 rootViewController 迁移过来。
+- (void)repointRNNWindowToSceneWindow:(UIWindow *)sceneWindow
+{
+  @try {
+    id nav = [ReactNativeNavigation sharedInstance];
+    id bridgeManager = [nav valueForKey:@"bridgeManager"];
+    id commandsHandler = [bridgeManager valueForKey:@"commandsHandler"];
+    UIWindow *oldWindow = [commandsHandler valueForKey:@"mainWindow"];
+    if (oldWindow != nil && oldWindow != sceneWindow) {
+      UIViewController *rootVC = oldWindow.rootViewController;
+      [commandsHandler setValue:sceneWindow forKey:@"mainWindow"];
+      if (rootVC != nil) {
+        sceneWindow.rootViewController = rootVC;
+        oldWindow.rootViewController = nil;
+      }
+      NSLog(@"[SceneDelegate] RNN window repointed to scene window");
+    }
+  } @catch (NSException *e) {
+    // KVC 失败不影响已显示的窗口，仅记录
+    NSLog(@"[SceneDelegate] repoint RNN window failed: %@", e);
+  }
 }
 
 @end
