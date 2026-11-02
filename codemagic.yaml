@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       node: 18
-      xcode: 15.2
+      xcode: 15.4
       cocoapods: default
     cache:
       cache_paths:
