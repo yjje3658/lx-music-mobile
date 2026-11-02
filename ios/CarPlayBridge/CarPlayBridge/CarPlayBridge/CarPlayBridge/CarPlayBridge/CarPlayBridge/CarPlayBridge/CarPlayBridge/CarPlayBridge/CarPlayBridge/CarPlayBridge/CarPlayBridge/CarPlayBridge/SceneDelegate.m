@@ -59,9 +59,12 @@
   [window makeKeyAndVisible];
 
   // 轮询等 JS bundle 加载完成（不依赖通知 object，最稳）
+  // 【闪退修复】递归 block 必须用 __block 修饰，
+  // 否则栈上 block 自引用在 dispatch_after 异步拷贝时拿到 NULL → SIGTRAP 崩溃
   __weak typeof(self) weakSelf = self;
   __block int tries = 0;
-  void (^waitAndBootstrap)(void) = ^{
+  __block void (^waitAndBootstrap)(void);
+  waitAndBootstrap = ^{
     __strong typeof(self) strongSelf = weakSelf;
     if (strongSelf == nil) return;
     if (bridge.isLoading && tries < 100) {
