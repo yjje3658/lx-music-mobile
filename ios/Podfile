@@ -32,6 +32,8 @@ target 'LxMusicMobile' do
   pod 'react-native-file-system', :path => '../node_modules/react-native-file-system'
   # iOS 端 FileSystemModule 原生实现（lyswhut fork 仅 Android，iOS 缺实现）
   pod 'RNFSIOS', :path => '../ios/RNFSIOS'
+  # iOS 端 LocalMediaMetadata 原生实现（lyswhut fork 仅 Android，iOS 缺实现）
+  pod 'LMMIOS', :path => '../ios/LMMIOS'
 
   use_react_native!(
     :path => config[:reactNativePath],
