@@ -8,18 +8,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  // 1. 创建主窗口（RNN 7 经典模式：application 级 window）
-  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-  self.window.backgroundColor = [UIColor whiteColor];
-  [self.window makeKeyAndVisible];
-
-  // 2. 创建 bridge
+  // 场景模式（Info.plist 声明了 UIApplicationSceneManifest）：
+  // 窗口创建 + RNN 启动移到 SceneDelegate.willConnectToSession 执行，
+  // 这里只负责创建 bridge（SceneDelegate 需要它）
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   self.bridge = bridge;
-
-  // 3. 启动 RNN（RN 0.73 旧架构标准 API）
-  [ReactNativeNavigation bootstrapWithBridge:bridge];
-
   return YES;
 }
 
