@@ -16,6 +16,14 @@ jobs:
           node-version: 18
           cache: npm
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
       - name: Install npm deps
         run: npm install
 
@@ -30,10 +38,28 @@ jobs:
           done
           xcodebuild -version
 
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: CocoaPods install (Flipper disabled)
         run: |
           cd ios
           NO_FLIPPER=1 pod install
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ios/build
+          key: ${{ runner.os }}-derived-${{ hashFiles('ios/Podfile', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-
 
       - name: Enable background audio mode in Info.plist
         run: |
