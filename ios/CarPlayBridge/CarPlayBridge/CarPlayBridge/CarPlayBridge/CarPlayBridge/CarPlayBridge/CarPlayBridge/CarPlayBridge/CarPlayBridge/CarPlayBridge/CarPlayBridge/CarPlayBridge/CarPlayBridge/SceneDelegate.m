@@ -25,9 +25,25 @@
     appDelegate.window = window;
   }
 
-  // RNN 接管导航（此时它拿到的就是我们已绑定场景的窗口）
-  [ReactNativeNavigation bootstrapWithBridge:bridge];
-  [window makeKeyAndVisible];
+  // 关键修复：等 JS bundle 加载完成后再让 RNN 接管。
+  // didFinishLaunching 创建 bridge 后 JS 是异步加载的，若立刻 bootstrap，
+  // RNN 拿不到就绪的 bridge → 不初始化 → 白屏（只停 LaunchScreen）。
+  if (bridge.isLoading) {
+    __weak typeof(self) weakSelf = self;
+    [[NSNotificationCenter defaultCenter] addObserverForName:RCTJavaScriptDidLoadNotification
+                                                      object:bridge
+                                                       queue:[NSOperationQueue mainQueue]
+                                                  usingBlock:^(NSNotification *note) {
+      __strong typeof(self) strongSelf = weakSelf;
+      if (strongSelf != nil) {
+        [ReactNativeNavigation bootstrapWithBridge:bridge];
+        [strongSelf.window makeKeyAndVisible];
+      }
+    }];
+  } else {
+    [ReactNativeNavigation bootstrapWithBridge:bridge];
+    [window makeKeyAndVisible];
+  }
 }
 
 @end
