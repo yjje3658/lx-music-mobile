@@ -3,12 +3,19 @@
 #import <React/RCTBridge.h>
 #import <ReactNativeNavigation/ReactNativeNavigation.h>
 
+// 【关键修复】ReactNativeNavigation.h（7.39.2）没有公开 sharedInstance，
+// 直接调用产生 warning，Release 构建把 warning 当 error（-Werror）→ 编译失败。
+// 补类扩展声明消除该 warning。
+@interface ReactNativeNavigation (Private)
++ (instancetype)sharedInstance;
+@end
+
 @implementation SceneDelegate
 
 // 关键修复：RNN 在 didFinishLaunching 时自己创建了"无场景"窗口（_mainWindow），
 // iOS 13+ 无场景窗口不显示 → 白屏。用 KVC 把 RNN 的 _mainWindow 换成场景窗口，
 // 并把已挂上的 rootViewController 迁移过来。
-// 【注意】此方法必须先于 willConnectToSession 定义，否则编译报 selector 找不到。
+// 【注意】此方法必须先于 willConnectToSession 定义。
 - (void)repointRNNWindowToSceneWindow:(UIWindow *)sceneWindow
 {
   @try {
