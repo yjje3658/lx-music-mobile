@@ -5,6 +5,31 @@
 
 @implementation SceneDelegate
 
+// 关键修复：RNN 在 didFinishLaunching 时自己创建了"无场景"窗口（_mainWindow），
+// iOS 13+ 无场景窗口不显示 → 白屏。用 KVC 把 RNN 的 _mainWindow 换成场景窗口，
+// 并把已挂上的 rootViewController 迁移过来。
+// 【注意】此方法必须先于 willConnectToSession 定义，否则编译报 selector 找不到。
+- (void)repointRNNWindowToSceneWindow:(UIWindow *)sceneWindow
+{
+  @try {
+    id nav = [ReactNativeNavigation sharedInstance];
+    id bridgeManager = [nav valueForKey:@"bridgeManager"];
+    id commandsHandler = [bridgeManager valueForKey:@"commandsHandler"];
+    UIWindow *oldWindow = [commandsHandler valueForKey:@"mainWindow"];
+    if (oldWindow != nil && oldWindow != sceneWindow) {
+      UIViewController *rootVC = oldWindow.rootViewController;
+      [commandsHandler setValue:sceneWindow forKey:@"mainWindow"];
+      if (rootVC != nil) {
+        sceneWindow.rootViewController = rootVC;
+        oldWindow.rootViewController = nil;
+      }
+      NSLog(@"[SceneDelegate] RNN window repointed to scene window");
+    }
+  } @catch (NSException *e) {
+    NSLog(@"[SceneDelegate] repoint RNN window failed: %@", e);
+  }
+}
+
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session
       options:(UISceneConnectionOptions *)connectionOptions
 {
@@ -43,31 +68,6 @@
     }
   };
   waitAndBootstrap();
-}
-
-// 关键修复：RNN 在 didFinishLaunching 时自己创建了"无场景"窗口（_mainWindow），
-// iOS 13+ 无场景窗口不显示 → 白屏。用 KVC 把 RNN 的 _mainWindow 换成场景窗口，
-// 并把已挂上的 rootViewController 迁移过来。
-- (void)repointRNNWindowToSceneWindow:(UIWindow *)sceneWindow
-{
-  @try {
-    id nav = [ReactNativeNavigation sharedInstance];
-    id bridgeManager = [nav valueForKey:@"bridgeManager"];
-    id commandsHandler = [bridgeManager valueForKey:@"commandsHandler"];
-    UIWindow *oldWindow = [commandsHandler valueForKey:@"mainWindow"];
-    if (oldWindow != nil && oldWindow != sceneWindow) {
-      UIViewController *rootVC = oldWindow.rootViewController;
-      [commandsHandler setValue:sceneWindow forKey:@"mainWindow"];
-      if (rootVC != nil) {
-        sceneWindow.rootViewController = rootVC;
-        oldWindow.rootViewController = nil;
-      }
-      NSLog(@"[SceneDelegate] RNN window repointed to scene window");
-    }
-  } @catch (NSException *e) {
-    // KVC 失败不影响已显示的窗口，仅记录
-    NSLog(@"[SceneDelegate] repoint RNN window failed: %@", e);
-  }
 }
 
 @end
