@@ -30,6 +30,8 @@ target 'LxMusicMobile' do
 
   # 手动链接 react-native-file-system（自动链接扫不到这个 git 依赖包，必须手动加）
   pod 'react-native-file-system', :path => '../node_modules/react-native-file-system'
+  # iOS 端 FileSystemModule 原生实现（lyswhut fork 仅 Android，iOS 缺实现）
+  pod 'RNFSIOS', :path => '../ios/RNFSIOS'
 
   use_react_native!(
     :path => config[:reactNativePath],
