@@ -34,6 +34,8 @@ target 'LxMusicMobile' do
   pod 'RNFSIOS', :path => '../ios/RNFSIOS'
   # iOS 端 LocalMediaMetadata 原生实现（lyswhut fork 仅 Android，iOS 缺实现）
   pod 'LMMIOS', :path => '../ios/LMMIOS'
+  # CarPlay 场景原生桥接（SceneDelegate + CarPlaySceneDelegate + RNCarPlayBridge）
+  pod 'CarPlayBridge', :path => '../ios/CarPlayBridge'
 
   use_react_native!(
     :path => config[:reactNativePath],
