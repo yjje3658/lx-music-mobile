@@ -16,7 +16,10 @@ const withTimeout = <T>(p: Promise<T>, ms: number, name: string): Promise<T | un
   ])
 
 export const getWindowSize = async() => {
-  const raw = await withTimeout(getWindowSizeRaw(), 3000, 'getWindowSizeRaw')
+  // 【修复】getWindowSizeRaw() 加 .catch(() => undefined)：
+  // iOS 没有 UtilsModule 原生模块，调用会 reject 直接炸掉 Promise 链。
+  // reject 转成 undefined 后走 Dimensions 兜底，初始化不再中断。
+  const raw = await withTimeout(getWindowSizeRaw().catch(() => undefined), 3000, 'getWindowSizeRaw')
   if (!raw || !raw.width) {
     const window = Dimensions.get('window')
     return {
