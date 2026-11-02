@@ -1,0 +1,49 @@
+workflows:
+  ios-unsigned:
+    name: lx-music iOS unsigned IPA
+    max_build_duration: 120
+    instance_type: macos
+    environment:
+      node: 18
+      xcode: 15.2
+      cocoapods: default
+    cache:
+      cache_paths:
+        - node_modules
+        - ios/Pods
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Add background audio mode to Info.plist
+        script: |
+          PLIST="ios/LxMusicMobile/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string audio" "$PLIST"
+      - name: CocoaPods install (Flipper disabled)
+        script: |
+          cd ios
+          NO_FLIPPER=1 pod install
+      - name: Build unsigned .app (Release, device SDK)
+        script: |
+          cd ios
+          xcodebuild -workspace LxMusicMobile.xcworkspace \
+            -scheme LxMusicMobile \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Package IPA
+        script: |
+          APP="ios/build/Build/Products/Release-iphoneos/LxMusicMobile.app"
+          test -d "$APP" || { echo "app not found: $APP"; exit 1; }
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry LxMusicMobile-unsigned.ipa Payload
+          rm -rf Payload
+          ls -la LxMusicMobile-unsigned.ipa
+    artifacts:
+      - LxMusicMobile-unsigned.ipa
