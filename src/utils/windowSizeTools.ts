@@ -1,15 +1,33 @@
 import { Dimensions, StatusBar } from 'react-native'
 import { getWindowSize as getWindowSizeRaw } from './nativeModules/utils'
-// import { log } from './log'
 
 export type SizeHandler = (size: { width: number, height: number }) => void
+
+// 原生模块超时兜底：iOS 端可能没有 getWindowSize 原生实现，超时后用 Dimensions 兜底
+const withTimeout = <T>(p: Promise<T>, ms: number, name: string): Promise<T | undefined> =>
+  Promise.race([
+    p,
+    new Promise<T | undefined>((resolve) => {
+      setTimeout(() => {
+        console.log(`[diag] ${name} 超时${ms}ms，使用 Dimensions 兜底`)
+        resolve(undefined)
+      }, ms)
+    }),
+  ])
+
 export const getWindowSize = async() => {
-  return getWindowSizeRaw().then((size) => {
-    const scale = Dimensions.get('window').scale
-    size.width = size.width / scale
-    size.height = size.height / scale
-    return size
-  })
+  const raw = await withTimeout(getWindowSizeRaw(), 3000, 'getWindowSizeRaw')
+  if (!raw || !raw.width) {
+    const window = Dimensions.get('window')
+    return {
+      width: Math.round(window.width),
+      height: Math.round(window.height) + (StatusBar.currentHeight ?? 0),
+    }
+  }
+  const scale = Dimensions.get('window').scale
+  raw.width = raw.width / scale
+  raw.height = raw.height / scale
+  return raw
 }
 
 export const windowSizeTools = {
@@ -29,29 +47,16 @@ export const windowSizeTools = {
     }
   },
   async init() {
-    // Dimensions.addEventListener('change', () => {
-    //   void getWindowSize().then((size) => {
-    //     if (!size.width) return
-    //     const scale = Dimensions.get('screen').scale
-    //     size.width = Math.round(size.width / scale)
-    //     size.height = Math.round(size.height / scale) + (StatusBar.currentHeight ?? 0)
-    //     this.size = size
-    //     for (const handler of this.listeners) handler(size)
-    //   })
-    // })
     const size = await getWindowSize()
-    // log.info('win size', size)
     if (size.width) {
       this.size = size
     } else {
       const window = Dimensions.get('window')
-      // log.info('Dimensions window size', window)
       this.size = {
         width: Math.round(window.width),
         height: Math.round(window.height) + (StatusBar.currentHeight ?? 0),
       }
     }
-    // console.log('init windowSizeTools')
     return size
   },
   setWindowSize(width: number, height: number) {
