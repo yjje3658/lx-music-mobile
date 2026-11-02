@@ -1,11 +1,11 @@
-#import <RCTAppDelegate.h>
 #import <UIKit/UIKit.h>
+#import <React/RCTBridgeDelegate.h>
 
 @class RCTBridge;
 
-@interface AppDelegate : RCTAppDelegate
+@interface AppDelegate : UIResponder <UIApplicationDelegate, RCTBridgeDelegate>
 
-// 新增：bridge 暴露给 SceneDelegate 使用
+@property (nonatomic, strong) UIWindow *window;
 @property (nonatomic, strong) RCTBridge *bridge;
 
 @end
