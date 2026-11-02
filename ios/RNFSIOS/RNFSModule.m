@@ -23,6 +23,7 @@ RCT_EXPORT_MODULE(FileSystemModule);
     @"DocumentDir": docDir ?: @"",
     @"MainBundleDir": mainBundle ?: @"",
     @"SDCardDir": docDir ?: @"", // iOS 无 SD 卡，映射到 Documents
+    @"DatabaseDir": docDir ?: @"", // Android-only 字段，iOS 映射 Documents（防 JS 取到 undefined）
   };
 }
 
