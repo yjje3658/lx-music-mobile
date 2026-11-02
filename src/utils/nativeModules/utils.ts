@@ -1,6 +1,29 @@
 import { AppState, NativeEventEmitter, NativeModules } from 'react-native'
 
-const { UtilsModule } = NativeModules
+// iOS（Bridgeless 新架构）没有 UtilsModule 原生模块：读取返回 undefined，
+// 这里给 JS 层兜底，避免模块加载即炸。注意：不能写 NativeModules（Bridgeless 下赋值会抛 JSError）。
+const fallbackUtilsModule = {
+  exitApp: () => {},
+  getSupportedAbis: () => [],
+  installApk: () => Promise.resolve(),
+  screenkeepAwake: () => {},
+  screenUnkeepAwake: () => {},
+  getWIFIIPV4Address: () => Promise.resolve(''),
+  getDeviceName: () => Promise.resolve('iPhone'),
+  isNotificationsEnabled: () => Promise.resolve(true),
+  requestNotificationPermission: () => Promise.resolve(true),
+  shareText: () => Promise.resolve(),
+  getSystemLocales: () => Promise.resolve('zh-CN'),
+  getWindowSize: () => Promise.resolve({ width: 0, height: 0 }),
+  isIgnoringBatteryOptimization: () => Promise.resolve(true),
+  requestIgnoreBatteryOptimization: () => Promise.resolve(),
+  openNotificationPermissionActivity: () => Promise.resolve(true),
+  listenWindowSizeChanged: () => {},
+  addListener: () => ({ remove: () => {} }),
+  removeListeners: () => {},
+}
+
+const UtilsModule = NativeModules.UtilsModule ?? fallbackUtilsModule
 
 export const exitApp = UtilsModule.exitApp
 
